@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="Web site created using create-react-app" />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <title>INVENTORY MANAGER</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f6f8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+
+      #scanner-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+        background-color: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+        max-width: 500px;
+        width: 90%;
+      }
+
+      h1 {
+        color: #5a189a;
+        font-size: 2em;
+        margin-bottom: 10px;
+      }
+
+      p {
+        font-size: 1.1em;
+        color: #333;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      #start-button {
+        background-color: #5a189a;
+        color: #ffffff;
+        border: none;
+        padding: 10px 20px;
+        font-size: 1.1em;
+        font-weight: bold;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.2s;
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      #start-button:hover {
+        background-color: #3c096c;
+      }
+
+      #start-button:active {
+        transform: scale(0.98);
+      }
+
+      video {
+        border: 2px solid #5a189a;
+        border-radius: 8px;
+        width: 100%;
+        margin-top: 20px;
+      }
+
+      #result {
+        font-size: 1.2em;
+        margin-top: 15px;
+        color: #333;
+      }
+
+      #barcode {
+        font-weight: bold;
+        color: #5a189a;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <div id="scanner-container">
+      <h1>Barcode Scanner</h1>
+      <p>Click the button to start scanning a barcode using your camera.</p>
+      <button id="start-button">Start Scanning</button>
+      <video id="video" width="30" height="300" autoplay></video>
+      <div id="result">Scanned Barcode: <span id="barcode"></span></div>
+    </div>
+
+    <!-- Include QuaggaJS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
+
+    <script>
+      // Wait for DOM content to load
+      document.addEventListener('DOMContentLoaded', () => {
+        const startButton = document.getElementById('start-button');
+        const videoElement = document.getElementById('video');
+        const resultContainer = document.getElementById('barcode');
+
+        // Start scanning when the button is clicked
+        startButton.addEventListener('click', startScanner);
+
+        function startScanner() {
+          // Set up the camera and start the video stream
+          if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true })
+              .then(stream => {
+                videoElement.srcObject = stream;
+                videoElement.play();
+                startBarcodeScanning();
+              })
+              .catch(err => {
+                console.error('Error accessing webcam:', err);
+              });
+          }
+        }
+
+        // Start scanning the barcode with QuaggaJS
+        function startBarcodeScanning() {
+          // Configure QuaggaJS to decode barcodes
+          Quagga.init({
+            inputStream: {
+              type: 'LiveStream',
+              target: videoElement, // Video element as the target
+            },
+            decoder: {
+              readers: ['code_128_reader', 'ean_reader', 'ean_8_reader', 'code_39_reader', 'upc_reader', 'upc_e_reader', 'i2of5_reader'],
+            },
+          }, function(err) {
+            if (err) {
+              console.error(err);
+              return;
+            }
+            Quagga.start();
+          });
+
+          // Event listener for when a barcode is detected
+          Quagga.onDetected(function(data) {
+            const barcode = data.codeResult.code;
+            resultContainer.textContent = barcode;
+          });
+        }
+      });
+    </script>
+  </body>
+</html>
